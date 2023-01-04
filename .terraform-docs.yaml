@@ -1,0 +1,27 @@
+version: ">= 0.13.0, < 1.0.0" # TF docs version
+formatter: markdown table
+output:
+  file: ./README.md
+  mode: inject
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    ## Documentation with terraform-docs
+    Terraform documentation automated with: [terraform-docs](https://github.com/terraform-docs/terraform-docs)
+    Configuration: [config file](../.terraform-docs.yml)
+    {{ .Content }}
+    <!-- END_TF_DOCS -->
+sort:
+  enabled: true
+  by: name
+
+settings:
+  anchor: false
+  color: true
+  default: true
+  description: true
+  escape: true
+  html: false
+  indent: 2
+  required: true
+  sensitive: true
+  type: true

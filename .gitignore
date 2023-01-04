@@ -5,6 +5,14 @@
 *.tfstate
 *.tfstate.*
 
+# log files
+*.log
+.terraform.lock.hcl
+
+# credential files
+*credentials.json
+*credentials*.json
+
 # Crash log files
 crash.log
 
@@ -27,3 +35,10 @@ override.tf.json
 
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
+
+# vscode
+.vscode/
+
+# IntelliJ
+*.iml
+/.idea

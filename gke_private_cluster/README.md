@@ -10,6 +10,9 @@ In order to get access to this sample setup following components will also be se
 - Private VPC
 - FW rules
 
+Some of the modules used in this example are in use to simplify the code and understand the required workflows easier. I tried to avoid to use too much features of a module and just use it for plain installation purposes. Instead the resources are within this example.
+In a real world scenario the used google modules can also roll out permissions and further configurations like VPC and FW. Its up to you to decide if you want to use full blown template modules or not.
+
 ## Precondition
 
 This will not setup the project itself nor any guardrails / policies on the organizational part. This needs to be in place beforehand.

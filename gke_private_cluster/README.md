@@ -41,6 +41,12 @@ Setup a tunnel with IAP from the bastion to your local machine:
 gcloud compute ssh --zone "europe-west3-a" "<BASTION_NAME>"  --tunnel-through-iap --project "<YOUR_PROJECT_ID>" -- -L 8888:localhost:8888 -N -q -f
 ```
 
+Get the credentials to access your cluster:
+
+```bash
+gcloud container clusters get-credentials "<CLUSTER_NAME>" --region europe-west3 --project "<YOUR_PROJECT_ID>"
+```
+
 Afterwards you can use kubectl or other tools by specifying the HTTPS_PROXY variable. The following command should list all running pods within the cluster
 
 ```bash

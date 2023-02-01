@@ -239,6 +239,9 @@ resource "google_iap_tunnel_instance_iam_binding" "enable_iap" {
 
 ##########################
 # Bastion Host
+# NOTE: 
+# KMS / Encryption has not been added here for simplicity,
+# but should be added beyond a playground
 ##########################
 
 resource "google_service_account" "bastion_service_account" {
@@ -261,6 +264,18 @@ module "instance_template" {
   metadata = {
     enable-oslogin = "TRUE"
   }
+
+  source_image         = "debian-11-bullseye-v20221206"
+  source_image_family  = "debian-11"
+  source_image_project = "debian-cloud"
+
+  startup_script = <<EOF
+  #! /bin/bash
+  apt-get update
+  apt-get install -y tinyproxy
+  grep -qxF 'Allow localhost' /etc/tinyproxy/tinyproxy.conf || echo 'Allow localhost' >> /etc/tinyproxy/tinyproxy.conf
+  service tinyproxy restart
+  EOF
 }
 
 resource "google_compute_instance_from_template" "tunnelvm" {
@@ -291,4 +306,47 @@ resource "google_project_iam_member" "os_login_bindings" {
   project  = google_compute_network.default.project
   role     = "roles/compute.osLogin"
   member   = each.key
+}
+
+##########################
+# Cloud NAT for package installations
+# + external pods
+##########################
+
+resource "google_compute_router" "default" {
+  name    = "cloud-router-${random_id.default.dec}"
+  project = google_compute_network.default.project
+  region  = google_compute_subnetwork.default.region
+  network = google_compute_network.default.id
+  bgp {
+    asn = "64514"
+  }
+}
+
+resource "google_compute_address" "nat" {
+  name    = "nat-address-${random_id.default.dec}"
+  project = google_compute_network.default.project
+  region  = google_compute_subnetwork.default.region
+}
+
+resource "google_compute_router_nat" "default" {
+  project                            = google_compute_router.default.project
+  region                             = google_compute_router.default.region
+  name                               = "cloud-router-nat-${random_id.default.dec}"
+  router                             = google_compute_router.default.name
+  nat_ip_allocate_option             = "MANUAL_ONLY"
+  nat_ips                            = [google_compute_address.nat.self_link]
+  source_subnetwork_ip_ranges_to_nat = "LIST_OF_SUBNETWORKS"
+  min_ports_per_vm                   = 1000
+  tcp_established_idle_timeout_sec   = 300
+
+  subnetwork {
+    name                    = google_compute_subnetwork.default.id
+    source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
+  }
+
+  log_config {
+    enable = true
+    filter = "ERRORS_ONLY"
+  }
 }

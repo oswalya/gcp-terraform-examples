@@ -23,12 +23,28 @@ This will not setup the project itself nor any guardrails / policies on the orga
 terraform apply -var project_id=<YOUR_PROJECT_ID> --auto-approve
 ```
 
-NOTE: if you are not the OWNER of the project you apply this code and use least privilege access (recommended if not on a playground) you need to specify the variable for `tunnel_user` as well as this will set required permissions for tunneling.
+NOTE: if you are not the OWNER of the project you apply this code to and use instead least privilege access (recommended if not on a playground) you need to specify the variable for `tunnel_user` as well as this will set required permissions for tunneling.
 
 After the successfull rollout of the TF code you should be able to use IAP tunneling to connect to the bastion host.
 
 ```bash
 gcloud compute ssh --zone "europe-west3-a" "<BASTION_NAME>"  --tunnel-through-iap --project "<YOUR_PROJECT_ID>"
+```
+
+## Bastion / Accessing GKE
+
+As this is a private installation of GKE you will not be able to use kubectl or API calls directly to the control plane or the nodes. For this demo a bastion host will be installed that has tinyproxy configured as a small proxy that can be used to enable local development.
+
+Setup a tunnel with IAP from the bastion to your local machine:
+
+```bash
+gcloud compute ssh --zone "europe-west3-a" "<BASTION_NAME>"  --tunnel-through-iap --project "<YOUR_PROJECT_ID>" -- -L 8888:localhost:8888 -N -q -f
+```
+
+Afterwards you can use kubectl or other tools by specifying the HTTPS_PROXY variable. The following command should list all running pods within the cluster
+
+```bash
+HTTPS_PROXY=localhost:8888 kubectl get po --all-namespaces
 ```
 
 <!-- BEGIN_TF_DOCS -->
@@ -63,11 +79,14 @@ Configuration: [config file](../.terraform-docs.yml)
 
 | Name | Type |
 |------|------|
+| [google_compute_address.nat](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_address) | resource |
 | [google_compute_firewall.allow_from_iap_to_instances](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall) | resource |
 | [google_compute_firewall.intra_egress](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall) | resource |
 | [google_compute_firewall.master_webhooks](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_firewall) | resource |
 | [google_compute_instance_from_template.tunnelvm](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_from_template) | resource |
 | [google_compute_network.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_network) | resource |
+| [google_compute_router.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router) | resource |
+| [google_compute_router_nat.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_router_nat) | resource |
 | [google_compute_subnetwork.default](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_subnetwork) | resource |
 | [google_iap_tunnel_instance_iam_binding.enable_iap](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iap_tunnel_instance_iam_binding) | resource |
 | [google_project_iam_member.cluster_service_account-artifact-registry](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
